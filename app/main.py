@@ -20,8 +20,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     debug: bool = False
     echo_active: bool = False
-    app_auth_token: str = None
-    app_auth_token_prod: str = None
+    app_auth_token: str = ""
+    app_auth_token_prod: str = ""
     skip_auth: bool = False
 
     class Config:
