@@ -6,3 +6,9 @@ pytest
 requests
 httpx
 pre-commit
+python-dotenv
+pydantic
+pydantic-settings
+python-multipart
+aiofiles
+PyPDF2
