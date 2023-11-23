@@ -31,9 +31,9 @@ class Settings(BaseSettings):
 def get_settings():
     return Settings()
 
-settings = Settings()
+settings = get_settings()
+DEBUG=settings.debug
 
-DEBUG=get_settings().debug
 BASE_DIR = pathlib.Path(__file__).parent
 UPLOAD_DIR = BASE_DIR / "uploads"
 
