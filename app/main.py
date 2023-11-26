@@ -44,7 +44,6 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 @app.get("/", response_class=HTMLResponse)
 def home_view(request: Request, settings:Settings = Depends(get_settings)):
-    print(DEBUG)
     return templates.TemplateResponse("home.html", {"request": request})
 
 def verify_auth(authorization = Header(None), settings:Settings = Depends(get_settings)):
@@ -60,6 +59,9 @@ def verify_auth(authorization = Header(None), settings:Settings = Depends(get_se
 @app.post("/")
 def file_analysis_view(file:UploadFile = File(...), authorization = Header(None), settings:Settings = Depends(get_settings)):
     verify_auth(authorization, settings)
+
+    #add file processing returning json object
+
     return {"hello":"world"}
 
 
