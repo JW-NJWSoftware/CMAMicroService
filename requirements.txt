@@ -13,3 +13,5 @@ python-multipart
 aiofiles
 PyPDF2
 nltk
+transformers
+torch

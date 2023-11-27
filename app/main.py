@@ -5,6 +5,7 @@ import uuid
 import PyPDF2
 import PyPDF2
 import nltk
+from transformers import pipeline
 from heapq import nlargest
 from nltk.tokenize import sent_tokenize
 from nltk.corpus import stopwords
@@ -71,9 +72,11 @@ def extract_text_from_pdf(file_path):
     return text
 
 def generate_text_summary(text):
+    text = "hello world"
     num_sentences=5
     sentences = sent_tokenize(text)
-
+    summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+    '''
     # Preprocess the text
     stopwords_list = set(stopwords.words('english'))
     words = nltk.word_tokenize(text.lower())
@@ -96,6 +99,9 @@ def generate_text_summary(text):
     # Get the top 'num_sentences' sentences with highest scores
     summary_sentences = nlargest(num_sentences, sentence_scores, key=sentence_scores.get)
     summary = ' '.join(summary_sentences)
+    '''
+    summary = summarizer(text, max_length=150, min_length=30, do_sample=False)[0]['summary_text']
+
     return summary
 
 
@@ -135,6 +141,12 @@ async def file_analysis_view(file:UploadFile = File(...), authorization = Header
         data = {"filetype":"Rich Text Format (RTF) document"}
     else:
         data = {"filetype":"Unknown"}
+
+    # Delete the file from the uploads directory
+    try:
+        dest.unlink()  # Delete the file
+    except Exception as e:
+        print(f"Error deleting file: {e}")
 
     return data
 
