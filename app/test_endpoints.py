@@ -12,7 +12,6 @@ def test_get_home():
 def test_post_file_analysis():
     settings = get_settings()
     file_saved_path = BASE_DIR / "testFiles"
-
     for path in file_saved_path.glob("*"):
         with open(path, 'rb') as file:
             fext = file.name.split('/')[-1]
@@ -22,6 +21,7 @@ def test_post_file_analysis():
                 files=files,
                 headers={"Authorization": f"JWT {settings.app_auth_token}"}
             )
+
             assert response.status_code == 200
             assert "application/json" in response.headers['content-type']
 

@@ -12,3 +12,4 @@ pydantic-settings
 python-multipart
 aiofiles
 PyPDF2
+nltk
