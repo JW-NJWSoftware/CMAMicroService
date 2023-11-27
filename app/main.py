@@ -100,7 +100,7 @@ def generate_text_summary(text):
     abstractedText = ' '.join(summary_sentences)
 
       # Split the text into chunks (customize chunk size based on your requirements)
-    chunk_size = 2000
+    chunk_size = 1000
     chunks = [abstractedText[i:i+chunk_size] for i in range(0, len(abstractedText), chunk_size)]
 
     # Summarize each chunk and concatenate the summaries
