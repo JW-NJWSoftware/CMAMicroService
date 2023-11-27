@@ -72,11 +72,10 @@ def extract_text_from_pdf(file_path):
     return text
 
 def generate_text_summary(text):
-    text = "hello world"
-    num_sentences=5
     sentences = sent_tokenize(text)
+    num_sentences = len(sentences)
     summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-    '''
+
     # Preprocess the text
     stopwords_list = set(stopwords.words('english'))
     words = nltk.word_tokenize(text.lower())
@@ -98,11 +97,21 @@ def generate_text_summary(text):
 
     # Get the top 'num_sentences' sentences with highest scores
     summary_sentences = nlargest(num_sentences, sentence_scores, key=sentence_scores.get)
-    summary = ' '.join(summary_sentences)
-    '''
-    summary = summarizer(text, max_length=150, min_length=30, do_sample=False)[0]['summary_text']
+    abstractedText = ' '.join(summary_sentences)
 
-    return summary
+      # Split the text into chunks (customize chunk size based on your requirements)
+    chunk_size = 2000
+    chunks = [abstractedText[i:i+chunk_size] for i in range(0, len(abstractedText), chunk_size)]
+
+    # Summarize each chunk and concatenate the summaries
+    summaries = []
+    for chunk in chunks:
+        summary = summarizer(chunk, max_length=150, min_length=30, do_sample=False)[0]['summary_text']
+        summaries.append(summary)
+
+    final_summary = " ".join(summaries)
+
+    return final_summary
 
 
 @app.get("/", response_class=HTMLResponse)
