@@ -24,6 +24,8 @@ def test_post_file_analysis():
 
             assert response.status_code == 200
             assert "application/json" in response.headers['content-type']
+            data = response.json()
+            print(str(data.get('summary')))
 
 def test_post_file_analysis_bad_auth():
     settings = get_settings()

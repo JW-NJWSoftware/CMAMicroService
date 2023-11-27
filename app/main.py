@@ -73,7 +73,7 @@ def extract_text_from_pdf(file_path):
 
 def generate_text_summary(text):
     sentences = sent_tokenize(text)
-    num_sentences = len(sentences)
+    num_sentences = int(len(sentences) * 0.75)
     summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
 
     # Preprocess the text
