@@ -16,7 +16,7 @@ from fastapi import (
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from pydantic_settings import BaseSettings
-from .AIFunctions import extract_text_from_pdf, generate_text_summary, extract_names, extract_text_from_txt, extract_text_from_rtf
+from .AIFunctions import extract_text_from_pdf, generate_text_summary, extract_names, extract_text_from_txt, ask_question
 
 baseAddress = ""
 
@@ -104,16 +104,6 @@ async def file_analysis_view(file:UploadFile = File(...), authorization = Header
                 "names":names,
                 "text":text
                 }
-        elif file_extension == 'rtf':
-            text = extract_text_from_rtf(dest)
-            summary = generate_text_summary(text)
-            names = extract_names(text)
-            data = {
-                "filetype":"Rich Text Format (RTF) document",
-                "summary":summary,
-                "names":names,
-                "text":text
-                }
         else:
             data = {"filetype":"Unknown"}
 
@@ -123,6 +113,18 @@ async def file_analysis_view(file:UploadFile = File(...), authorization = Header
             dest.unlink()  # Delete the file
         except Exception as e:
             print(f"Error deleting file: {e}")
+
+    return data
+
+@app.post(baseAddress + "/chat/")
+async def chat_view(requestData: dict = None, authorization = Header(None), settings:Settings = Depends(get_settings)):
+    verify_auth(authorization, settings)
+    data = {}
+
+    question = requestData.get('question')
+    context = requestData.get('context')
+
+    data = ask_question(question, context)
 
     return data
 

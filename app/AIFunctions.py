@@ -3,13 +3,13 @@ import io
 import PyPDF2
 import docx
 import docx2txt
-from pyth import plugin
 import nltk
 from transformers import (
     pipeline, 
     BartTokenizer, 
     BartForConditionalGeneration, 
-    AutoModelForTokenClassification, 
+    AutoModelForTokenClassification,
+    AutoModelForQuestionAnswering, 
     AutoTokenizer
     )
 from heapq import nlargest
@@ -41,16 +41,6 @@ def extract_text_from_txt(file_path):
     try:
         with open(file_path, 'r') as file:
             text = file.read()
-        return text
-    except FileNotFoundError:
-        print(f"File '{file_path}' not found.")
-        return None
-
-def extract_text_from_rtf(file_path):
-    try:
-        with open(file_path, 'rb') as file:
-            doc = plugin.Rtf15Reader.read(file)
-            text = doc.get_text().encode('utf-8').decode('utf-8')
         return text
     except FileNotFoundError:
         print(f"File '{file_path}' not found.")
@@ -141,3 +131,16 @@ def extract_names(text):
 
     names_string = ', '.join(full_names)
     return names_string
+
+def ask_question(question, context):
+    model = AutoModelForQuestionAnswering.from_pretrained(models_directory + "roberta-base-squad2")
+    tokenizer = AutoTokenizer.from_pretrained(models_directory + "roberta-base-squad2")
+    qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
+    QA_input = {
+        'question': question,
+        'context': context
+    }
+
+    result = qa_pipeline(QA_input)
+
+    return result
