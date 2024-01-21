@@ -17,6 +17,7 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from pydantic_settings import BaseSettings
 from .AIFunctions import extract_text_from_pdf, generate_text_summary, extract_names, extract_text_from_txt, ask_question
+from typing import Optional
 
 baseAddress = ""
 
@@ -58,7 +59,13 @@ def home_view(request: Request, settings:Settings = Depends(get_settings)):
     return templates.TemplateResponse("home.html", {"request": request})
 
 @app.post(baseAddress + "/")
-async def file_analysis_view(file:UploadFile = File(...), authorization = Header(None), settings:Settings = Depends(get_settings)):
+async def file_analysis_view(
+    file:UploadFile = File(...), 
+    authorization = Header(None), 
+    settings:Settings = Depends(get_settings),
+    chunk_size: Optional[int] = Header(None),
+    sentence_cut_percentage: Optional[float] = Header(None),
+    ):
     verify_auth(authorization, settings)
     data = {}
     UPLOAD_DIR.mkdir(exist_ok=True)
@@ -76,7 +83,7 @@ async def file_analysis_view(file:UploadFile = File(...), authorization = Header
     try:
         if file_extension == 'txt':
             text = extract_text_from_txt(dest)
-            summary = generate_text_summary(text)
+            summary = generate_text_summary(text, chunk_size, sentence_cut_percentage)
             names = extract_names(text)
             data = {
                 "filetype":"Plain text document",
@@ -86,7 +93,7 @@ async def file_analysis_view(file:UploadFile = File(...), authorization = Header
                 }
         elif file_extension == 'doc' or file_extension == 'docx':
             text = extract_text_from_doc(dest)
-            summary = generate_text_summary(text)
+            summary = generate_text_summary(text, chunk_size, sentence_cut_percentage)
             names = extract_names(text)
             data = {
                 "filetype":"Word document",
@@ -96,7 +103,7 @@ async def file_analysis_view(file:UploadFile = File(...), authorization = Header
                 }
         elif file_extension == 'pdf':
             text = extract_text_from_pdf(dest)
-            summary = generate_text_summary(text)
+            summary = generate_text_summary(text, chunk_size, sentence_cut_percentage)
             names = extract_names(text)
             data = {
                 "filetype":"PDF document",
@@ -105,7 +112,10 @@ async def file_analysis_view(file:UploadFile = File(...), authorization = Header
                 "text":text
                 }
         else:
-            data = {"filetype":"Unknown"}
+            data = {
+                "filetype":"Unknown",
+                "summary":"Sorry, a summary cannot be generated for this file format"
+                }
 
     # Delete the file from the uploads directory
     finally:

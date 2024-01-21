@@ -58,9 +58,10 @@ def extract_text_from_doc(file_path):
         print(f"File '{file_path}' not found.")
         return None
 
-def generate_text_summary(text):
+def generate_text_summary(text, chunk_size: int = 1000, sentence_cut_percentage: float = 25):
+    percentage_kept = (100 - sentence_cut_percentage) / 100
     sentences = sent_tokenize(text)
-    num_sentences = int(len(sentences) * 0.75)
+    num_sentences = int(len(sentences) * percentage_kept)
 
     #load the AI model
     tokenizer = BartTokenizer.from_pretrained(models_directory + "bart-large-cnn")
@@ -90,7 +91,6 @@ def generate_text_summary(text):
     abstractedText = ' '.join(summary_sentences)
 
     # Split the text into chunks (customize chunk size based on your requirements)
-    chunk_size = 1000
     chunks = [abstractedText[i:i+chunk_size] for i in range(0, len(abstractedText), chunk_size)]
 
     # Summarize each chunk and concatenate the summaries
