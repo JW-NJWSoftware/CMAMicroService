@@ -127,14 +127,14 @@ async def file_analysis_view(
     return data
 
 @app.post(baseAddress + "/chat/")
-async def chat_view(requestData: dict = None, authorization = Header(None), settings:Settings = Depends(get_settings)):
+async def chat_view(requestData: dict = None, authorization = Header(None), settings:Settings = Depends(get_settings), modelChoice: Optional[str] = Header(None),):
     verify_auth(authorization, settings)
     data = {}
 
     question = requestData.get('question')
     context = requestData.get('context')
 
-    data = ask_question(question, context)
+    data = ask_question(question, context, modelChoice)
 
     return data
 

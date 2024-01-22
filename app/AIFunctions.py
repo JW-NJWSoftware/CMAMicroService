@@ -4,12 +4,14 @@ import PyPDF2
 import docx
 import docx2txt
 import nltk
+import re
 from transformers import (
     pipeline, 
     BartTokenizer, 
     BartForConditionalGeneration, 
     AutoModelForTokenClassification,
-    AutoModelForQuestionAnswering, 
+    AutoModelForQuestionAnswering,
+    AutoModelForCausalLM,
     AutoTokenizer
     )
 from heapq import nlargest
@@ -132,15 +134,80 @@ def extract_names(text):
     names_string = ', '.join(full_names)
     return names_string
 
-def ask_question(question, context):
-    model = AutoModelForQuestionAnswering.from_pretrained(models_directory + "roberta-base-squad2")
-    tokenizer = AutoTokenizer.from_pretrained(models_directory + "roberta-base-squad2")
-    qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
+def ask_question(question, context, modelChoice):
     QA_input = {
         'question': question,
         'context': context
     }
 
+    if modelChoice == "roberta-base-squad2":
+        model = AutoModelForQuestionAnswering.from_pretrained(models_directory + "roberta-base-squad2")
+        tokenizer = AutoTokenizer.from_pretrained(models_directory + "roberta-base-squad2")
+        qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
+    elif modelChoice == "bert-base-cased-squad2":
+        model = AutoModelForQuestionAnswering.from_pretrained(models_directory + "bert-base-cased-squad2")
+        tokenizer = AutoTokenizer.from_pretrained(models_directory + "bert-base-cased-squad2")
+        qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
+    elif modelChoice == "bert-large-uncased-whole-word-masking-finetuned-squad":
+        model = AutoModelForQuestionAnswering.from_pretrained(models_directory + "bert-large-uncased-whole-word-masking-finetuned-squad")
+        tokenizer = AutoTokenizer.from_pretrained(models_directory + "bert-large-uncased-whole-word-masking-finetuned-squad")
+        qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
+    elif modelChoice == "ensemble":
+        model = AutoModelForQuestionAnswering.from_pretrained(models_directory + "roberta-base-squad2")
+        tokenizer = AutoTokenizer.from_pretrained(models_directory + "roberta-base-squad2")
+        qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
+        
+        resultA = qa_pipeline(QA_input)
+
+        model = AutoModelForQuestionAnswering.from_pretrained(models_directory + "bert-base-cased-squad2")
+        tokenizer = AutoTokenizer.from_pretrained(models_directory + "bert-base-cased-squad2")
+        qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
+        
+        resultB = qa_pipeline(QA_input)
+
+        model = AutoModelForQuestionAnswering.from_pretrained(models_directory + "bert-large-uncased-whole-word-masking-finetuned-squad")
+        tokenizer = AutoTokenizer.from_pretrained(models_directory + "bert-large-uncased-whole-word-masking-finetuned-squad")
+        qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
+
+        resultC = qa_pipeline(QA_input)
+    
+        results = [resultA, resultB, resultC]
+    
+        best_result = max(results, key=lambda result: result['score'])
+
+        answerContext = extract_answer_context(context, best_result['start'], best_result['end'])
+
+        best_result['answerContext'] = answerContext
+
+        return best_result
+    else:
+        model = AutoModelForQuestionAnswering.from_pretrained(models_directory + "roberta-base-squad2")
+        tokenizer = AutoTokenizer.from_pretrained(models_directory + "roberta-base-squad2")
+        qa_pipeline = pipeline('question-answering', model=model, tokenizer=tokenizer)
+
     result = qa_pipeline(QA_input)
 
+    answerContext = extract_answer_context(context, result['start'], result['end'])
+
+    result['answerContext'] = answerContext
+
     return result
+
+def extract_answer_context(full_text, start_idx, end_idx):
+    # Tokenize the text into sentences
+    sentences = nltk.sent_tokenize(full_text)
+
+    # Split each sentence based on newlines
+    sentences_with_newlines = [re.split(r'\n', sentence) for sentence in sentences]
+
+    # Flatten the list to get sentences with newlines as separate sentences
+    sentences = [sentence for sublist in sentences_with_newlines for sentence in sublist]
+
+    # Find the sentence containing the answer
+    answer_sentence = None
+    for sentence in sentences:
+        if start_idx >= full_text.find(sentence) and end_idx <= full_text.find(sentence) + len(sentence):
+            answer_sentence = sentence
+            break
+
+    return answer_sentence
