@@ -50,11 +50,18 @@ def extract_text_from_txt(file_path):
 
 def extract_text_from_doc(file_path):
     try:
-        if file_path.endswith('.docx'):
-            doc = docx.Document(file_path)
+        # Convert file_path to string
+        file_path_str = str(file_path)
+        
+        if file_path_str.endswith('.docx'):
+            doc = docx.Document(file_path_str)
             text = '\n'.join([para.text for para in doc.paragraphs])
-        elif file_path.endswith('.doc'):
-            text = docx2txt.process(file_path)
+        elif file_path_str.endswith('.doc'):
+            text = docx2txt.process(file_path_str)
+        else:
+            print(f"Unsupported file format for '{file_path_str}'.")
+            return None
+
         return text
     except FileNotFoundError:
         print(f"File '{file_path}' not found.")
@@ -115,22 +122,23 @@ def extract_names(text):
 
     sentences = nltk.sent_tokenize(text)
     named_entities = ner_pipeline(sentences)
-    full_names = []
+    full_names = set()  # Use a set to automatically handle duplicates
 
     for sentence_entities in named_entities:
         current_name = ''
         for entity in sentence_entities:
             if entity['entity'] == 'B-PER':
                 if current_name:
-                    full_names.append(current_name.strip())
+                    full_names.add(current_name.strip())
                     current_name = ''
                 current_name = entity['word']
             elif entity['entity'] == 'I-PER':
                 current_name += ' ' + entity['word']
 
         if current_name:
-            full_names.append(current_name.strip())
+            full_names.add(current_name.strip())
 
+    names_list = list(full_names)  # Convert set back to list
     names_string = ', '.join(full_names)
     return names_string
 

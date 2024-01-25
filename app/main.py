@@ -16,7 +16,7 @@ from fastapi import (
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from pydantic_settings import BaseSettings
-from .AIFunctions import extract_text_from_pdf, generate_text_summary, extract_names, extract_text_from_txt, ask_question
+from .AIFunctions import extract_text_from_txt, extract_text_from_doc, extract_text_from_pdf, generate_text_summary, extract_names, ask_question
 from typing import Optional
 
 baseAddress = ""
