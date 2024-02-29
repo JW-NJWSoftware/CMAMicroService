@@ -34,7 +34,20 @@ def extract_text_from_pdf(file_path):
             for page_num in range(num_pages):
                 page = pdf_reader.pages[page_num]
                 text += page.extract_text()
-        return text
+
+        cleaned_text = re.sub(r'\t+', '', text)
+        cleaned_text = re.sub(r'\s+', ' ', cleaned_text)
+        cleaned_text = cleaned_text.strip()
+
+        sentences = cleaned_text.split('.')
+        cleaned_sentences = []
+        for sentence in sentences:
+            if len(sentence.strip()) >= 10 and sentence.strip()[0].isupper():
+                cleaned_sentences.append(sentence.strip())
+        cleaned_text = '. '.join(cleaned_sentences)
+            
+        return cleaned_text
+        
     except FileNotFoundError:
         print(f"File '{file_path}' not found.")
         return None
